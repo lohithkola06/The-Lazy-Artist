@@ -1,0 +1,38 @@
+# Baseline config: "cheating" model on Colored-MNIST
+
+run:
+  name: "baseline_cnn"
+  out_dir: "runs"         # run outputs stored in runs/<name>_<timestamp>/
+  save_best: true
+
+seed: 42
+device: "auto"            # "auto" | "cpu" | "cuda"
+
+data:
+  # You will implement these in src/data (dataset + generator).
+  dataset: "colored_mnist"
+  root: "data/colored_mnist"  # expected layout: train/ val/ test_hard/
+  num_workers: 2
+  batch_size: 128
+
+  # Colored-MNIST bias parameters (for your generator / metadata)
+  correlation_train: 0.95
+  test_mode: "inverted"   # "inverted" or "random"
+  num_classes: 10
+
+model:
+  name: "simple_cnn"      # you’ll implement registry in src/models
+  in_channels: 3
+  num_classes: 10
+
+train:
+  epochs: 10
+  lr: 0.001
+  weight_decay: 0.0001
+  optimizer: "adamw"      # "adam" | "adamw" | "sgd"
+  scheduler: "none"       # "none" | "step" | "cosine"
+  step_size: 5
+  gamma: 0.1
+
+eval:
+  split: "val"            # default eval split during training

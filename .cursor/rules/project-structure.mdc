@@ -1,0 +1,27 @@
+---
+description: Directory structure and key files for the Lazy Artist CV task repo
+---
+
+Project layout (expected):
+
+- `configs/` : YAML configs for experiments
+  - `baseline.yaml` : baseline “cheating” model config
+  - (later) `robust_*.yaml` : intervention configs
+- `src/` : all reusable Python code (not notebooks)
+  - `data/` : dataset generation + dataset classes (Colored-MNIST)
+  - `models/` : CNN/ResNet models, registry/factory (if used)
+  - `interpret/` : interpretability (Grad-CAM from scratch, activation maximization)
+  - `utils/` : seeding, logging, metrics, helpers
+  - `train.py` : training entrypoint (reads config, writes runs/)
+  - `eval.py` : evaluation entrypoint (hard test, confusion matrix)
+- `notebooks/` : REQUIRED experiment logs (Task 0–4 notebooks)
+  - `00_dataset.ipynb` : generate + sanity-check Colored-MNIST
+  - `01_lazy_model.ipynb` : baseline training + collapse analysis
+  - `02_interpretability.ipynb` : ActMax + Grad-CAM visuals
+  - `03_interventions.ipynb` : 2+ anti-spurious strategies + ablations
+- `runs/` : generated outputs (NOT committed) — logs, checkpoints, figures
+- `reports/` : final writeup/presentation + exported figures
+
+Conventions:
+- Notebooks should call into `src/` instead of re-implementing logic.
+- Save plots/tables used in the report under `runs/<run>/figures/` and/or `reports/figures/`.

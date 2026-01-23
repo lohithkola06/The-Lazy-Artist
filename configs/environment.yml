@@ -1,0 +1,19 @@
+name: lazy-artist
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - pyyaml
+  - tqdm
+  - matplotlib
+  - scikit-learn
+  - jupyter
+  - ipykernel
+  - pytorch
+  - torchvision
+  - pip:
+      - --upgrade pip

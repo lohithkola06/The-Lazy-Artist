@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data / artifacts
+data/
+datasets/
+*.pt
+*.pth
+*.ckpt
+runs/
+outputs/
+wandb/
+
+# OS
+.DS_Store
+
