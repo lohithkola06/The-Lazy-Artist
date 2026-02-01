@@ -9,15 +9,14 @@ seed: 42
 device: "auto"            # "auto" | "cpu" | "cuda"
 
 data:
-  # You will implement these in src/data (dataset + generator).
   dataset: "colored_mnist"
-  root: "data/colored_mnist"  # expected layout: train/ val/ test_hard/
+  root: "data/colored_mnist"  # contains train.pt, val.pt, test_hard.pt
   num_workers: 2
   batch_size: 128
 
-  # Colored-MNIST bias parameters (for your generator / metadata)
-  correlation_train: 0.95
-  test_mode: "inverted"   # "inverted" or "random"
+  # Colored-MNIST bias parameters
+  correlation_train: 0.95     # train/val: 95% dominant color, 5% random other
+  test_mode: "inverted"       # test_hard: random color excluding dominant (breaks spurious correlation)
   num_classes: 10
 
 model:
