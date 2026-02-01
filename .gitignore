@@ -10,9 +10,9 @@ venv/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data / artifacts
-data/
-datasets/
+# Data / artifacts (but not src/data/)
+/data/
+/datasets/
 *.pt
 *.pth
 *.ckpt
