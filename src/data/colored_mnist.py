@@ -76,7 +76,9 @@ def sample_color_id(
         split: One of "train", "val", "test_hard"
         rng: Random number generator
         corr: Correlation strength for train/val (default 0.95)
-        test_mode: How to handle test_hard - "inverted" or "random"
+        test_mode: For test_hard split - "inverted" samples randomly among
+            non-dominant colors (never uses dominant). This makes test genuinely
+            hard by removing any predictable correlation.
     
     Returns:
         Color ID (0-9)
@@ -91,8 +93,7 @@ def sample_color_id(
             return rng.choice([c for c in range(10) if c != dominant])
     
     elif split == "test_hard":
-        # Hard test: never use dominant color
-        # Sample uniformly among non-dominant colors
+        # Hard test: never use dominant color, sample uniformly among others
         return rng.choice([c for c in range(10) if c != dominant])
     
     else:

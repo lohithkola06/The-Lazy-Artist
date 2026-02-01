@@ -20,6 +20,7 @@ def load_split(root: Path | str, split: str) -> Dict[str, torch.Tensor]:
         Dictionary with "images", "labels", "color_ids" tensors
     """
     root = Path(root)
+    # Note: Not using weights_only=True for broader PyTorch version compatibility
     data = torch.load(root / f"{split}.pt", map_location="cpu")
     return data
 
