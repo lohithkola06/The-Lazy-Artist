@@ -10,7 +10,7 @@ This repo implements the PreCog CV task around **spurious correlations** using a
 
 - `configs/` : YAML configs
 - `src/` :
-  - `data/` : dataset code (to be added)
+  - `data/` : dataset code
   - `models/` : model definitions (to be added)
   - `train.py` : training entrypoint
   - `eval.py` : evaluation entrypoint
@@ -29,3 +29,21 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
+```
+
+## Task 0: Colored-MNIST dataset
+
+Generate the biased dataset (Easy train/val + Hard test) with textured foreground coloring:
+```bash
+python scripts/generate_colored_mnist.py --root data/colored_mnist --correlation-train 0.95 --test-mode inverted
+```
+
+Verify the correlation statistics:
+```bash
+python scripts/verify_colored_mnist.py --root data/colored_mnist --expected-train 0.95 --expected-val 0.95
+```
+
+Visualize a sample grid:
+```bash
+python scripts/visualize_colored_mnist.py --root data/colored_mnist --split train --n 36 --out runs/colored_mnist_train.png
+```

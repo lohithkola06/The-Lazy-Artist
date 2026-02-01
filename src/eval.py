@@ -56,7 +56,7 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = load_config(args.config)
-    seed_everything(SeedConfig(seed=int(cfg.get("seed", 42)), deterministic=False))
+    seed_everything(SeedConfig(seed=int(cfg.get("seed", 42))))
     device = pick_device(cfg.get("device", "auto"))
 
     split = args.split if args.split is not None else cfg.get("eval", {}).get("split", "val")

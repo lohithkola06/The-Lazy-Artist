@@ -16,7 +16,7 @@ except Exception:  # pragma: no cover
 @dataclass(frozen=True)
 class SeedConfig:
     seed: int = 42
-    deterministic: bool = False  # set True for reproducibility (may slow training)
+    deterministic: bool = True  # ensures reproducibility (slight performance cost, acceptable for this project)
 
 
 def seed_everything(cfg: SeedConfig | int) -> int:

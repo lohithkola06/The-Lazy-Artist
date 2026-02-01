@@ -108,7 +108,7 @@ def main() -> None:
     cfg = load_config(args.config)
 
     # Seed
-    seed_everything(SeedConfig(seed=int(cfg.get("seed", 42)), deterministic=False))
+    seed_everything(SeedConfig(seed=int(cfg.get("seed", 42))))
 
     # Run folder
     run_name = cfg["run"]["name"]
