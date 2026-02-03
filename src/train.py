@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
@@ -13,10 +12,8 @@ from torch.utils.data import DataLoader
 
 from src.utils.seed import seed_everything, SeedConfig
 from src.utils.logging import make_run_dir, save_config, log_jsonl
-
-# TODO: implement these modules
-# from src.data.datasets import get_dataloaders
-# from src.models.registry import build_model
+from src.data.datasets import get_dataloaders
+from src.models.registry import build_model
 
 
 def load_config(path: str) -> Dict[str, Any]:
@@ -118,46 +115,38 @@ def main() -> None:
 
     device = pick_device(cfg.get("device", "auto"))
 
-    # -----------------------------
-    # TODO: plug in your dataset + model
-    # -----------------------------
-    raise NotImplementedError(
-        "Next steps:\n"
-        "1) Implement get_dataloaders in src/data/datasets.py\n"
-        "2) Implement build_model in src/models/registry.py (or directly import your model)\n"
-        "Then replace this NotImplementedError block."
-    )
-
-    # Example expected code after you implement:
-    #
-    # train_loader, val_loader = get_dataloaders(cfg["data"])
-    # model = build_model(cfg["model"]).to(device)
-    #
-    # opt = build_optimizer(cfg, model)
-    # best_val_acc = -1.0
-    #
-    # for epoch in range(1, int(cfg["train"]["epochs"]) + 1):
-    #     tr_loss, tr_acc = train_one_epoch(model, train_loader, opt, device)
-    #     va_loss, va_acc = evaluate(model, val_loader, device)
-    #
-    #     record = {
-    #         "epoch": epoch,
-    #         "train_loss": tr_loss,
-    #         "train_acc": tr_acc,
-    #         "val_loss": va_loss,
-    #         "val_acc": va_acc,
-    #         "device": str(device),
-    #     }
-    #     log_jsonl(paths.log_jsonl, record)
-    #     print(record)
-    #
-    #     if va_acc > best_val_acc:
-    #         best_val_acc = va_acc
-    #         ckpt_path = paths.ckpt_dir / "best.pt"
-    #         torch.save({"model": model.state_dict(), "config": cfg}, ckpt_path)
-    #
-    # # Save last
-    # torch.save({"model": model.state_dict(), "config": cfg}, paths.ckpt_dir / "last.pt")
+    loaders = get_dataloaders(cfg["data"])
+    train_loader = loaders["train"]
+    val_loader = loaders["val"]
+    
+    model = build_model(cfg["model"]).to(device)
+    opt = build_optimizer(cfg, model)
+    
+    best_val_acc = -1.0
+    epochs = cfg["train"]["epochs"]
+    
+    for epoch in range(1, epochs + 1):
+        tr_loss, tr_acc = train_one_epoch(model, train_loader, opt, device)
+        va_loss, va_acc = evaluate(model, val_loader, device)
+        
+        record = {
+            "epoch": epoch,
+            "train_loss": round(tr_loss, 4),
+            "train_acc": round(tr_acc, 4),
+            "val_loss": round(va_loss, 4),
+            "val_acc": round(va_acc, 4),
+        }
+        log_jsonl(paths.log_jsonl, record)
+        print(f"[{epoch}/{epochs}] train_acc={tr_acc:.3f} val_acc={va_acc:.3f}")
+        
+        if va_acc > best_val_acc:
+            best_val_acc = va_acc
+            torch.save({"model": model.state_dict(), "config": cfg, "epoch": epoch, "val_acc": va_acc}, 
+                       paths.ckpt_dir / "best.pt")
+    
+    torch.save({"model": model.state_dict(), "config": cfg, "epoch": epochs}, paths.ckpt_dir / "last.pt")
+    print(f"done. best val_acc={best_val_acc:.4f}")
+    print(f"checkpoints saved to {paths.ckpt_dir}")
 
 
 if __name__ == "__main__":

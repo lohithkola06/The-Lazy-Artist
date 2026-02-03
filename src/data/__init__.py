@@ -9,6 +9,8 @@ from src.data.colored_mnist import (
     make_dominant_color_map,
     compute_overall_correlation,
     compute_empirical_correlation,
+    colorize_with_background,
+    PALETTE,
 )
 
 from src.data.datasets import (
