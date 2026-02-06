@@ -17,20 +17,20 @@ except ImportError:
     MNIST = None
     TORCHVISION_AVAILABLE = False
 
-# picked these to be easily distinguishable
+# 10 maximally distinguishable colors (spread across hue wheel + varying brightness)
 PALETTE = [
-    (220, 20, 60),    # 0: red
-    (0, 200, 80),     # 1: green
-    (30, 144, 255),   # 2: blue
-    (255, 220, 0),    # 3: yellow
-    (148, 0, 211),    # 4: purple
-    (0, 200, 200),    # 5: cyan
-    (255, 140, 0),    # 6: orange
-    (255, 20, 147),   # 7: pink
-    (139, 69, 19),    # 8: brown
-    (105, 105, 105),  # 9: gray
+    (255, 0, 0),      # 0: red
+    (0, 255, 0),      # 1: lime
+    (0, 0, 255),      # 2: blue
+    (255, 255, 0),    # 3: yellow
+    (255, 0, 255),    # 4: magenta
+    (0, 255, 255),    # 5: cyan
+    (255, 128, 0),    # 6: orange
+    (128, 0, 255),    # 7: violet
+    (0, 128, 0),      # 8: dark green
+    (128, 128, 128),  # 9: gray
 ]
-COLOR_NAMES = ["red", "green", "blue", "yellow", "purple", "cyan", "orange", "pink", "brown", "gray"]
+COLOR_NAMES = ["red", "lime", "blue", "yellow", "magenta", "cyan", "orange", "violet", "dark_green", "gray"]
 
 
 def get_color_palette():
@@ -68,11 +68,17 @@ def make_textured_background(H, W, rgb, noise_std=0.15, rng=None):
     return torch.clamp(bg + noise, 0.0, 1.0)
 
 
-def colorize_with_background(gray, bg_rgb, noise_std=0.15, rng=None, digit_contrast=0.5):
-    """tint the digit to match background color - makes color the dominant feature"""
+def colorize_with_background(gray, bg_rgb, digit_rgb, noise_std=0.15, rng=None, digit_darkness=0.4):
+    """
+    same-colored digit on noisy textured background, but digit is darker so it's visible
+    digit_darkness: 0 = same as bg, 1 = black. 0.4 means digit is 40% darker than bg.
+    """
     H, W = gray.shape
     bg = make_textured_background(H, W, bg_rgb, noise_std, rng)
-    digit_color = bg * digit_contrast
+    # digit is a darker version of the same color
+    digit_color = torch.tensor([digit_rgb[0], digit_rgb[1], digit_rgb[2]], dtype=torch.float32) / 255.0
+    digit_color = digit_color * (1 - digit_darkness)  # darken it
+    digit_color = digit_color.view(3, 1, 1).expand(3, H, W)
     alpha = gray.unsqueeze(0).expand(3, -1, -1)
     return (1 - alpha) * bg + alpha * digit_color
 
@@ -91,7 +97,7 @@ def colorize_strokes(gray, rgb, mode="soft"):
 
 
 def make_split(mnist_images, mnist_labels, split, corr, dominant_map, palette, rng,
-               noise_std=0.15, digit_contrast=0.5):
+               noise_std=0.15):
     N = len(mnist_images)
     images = torch.zeros(N, 3, 28, 28, dtype=torch.float32)
     labels = torch.zeros(N, dtype=torch.long)
@@ -101,7 +107,8 @@ def make_split(mnist_images, mnist_labels, split, corr, dominant_map, palette, r
         gray = mnist_images[i].float() / 255.0
         label = int(mnist_labels[i])
         color_id = sample_color_id(label, split, corr, dominant_map, rng)
-        images[i] = colorize_with_background(gray, palette[color_id], noise_std, rng, digit_contrast)
+        # digit and background are SAME color - makes color shortcut very strong
+        images[i] = colorize_with_background(gray, palette[color_id], palette[color_id], noise_std, rng)
         labels[i] = label
         color_ids[i] = color_id
 
@@ -145,7 +152,7 @@ def compute_overall_correlation(labels, color_ids, dominant_map):
 
 
 def generate_colored_mnist(out_dir, seed=42, corr=0.95, val_fraction=0.1, 
-                           noise_std=0.15, digit_contrast=0.5):
+                           noise_std=0.15):
     if not TORCHVISION_AVAILABLE:
         raise RuntimeError("need torchvision")
 
@@ -170,20 +177,20 @@ def generate_colored_mnist(out_dir, seed=42, corr=0.95, val_fraction=0.1,
     print(f"  train: {n - n_val}, val: {n_val}, test_hard: {len(test_images)}")
 
     train_data = make_split(train_images[indices[n_val:]], train_labels[indices[n_val:]], 
-                            "train", corr, dominant_map, palette, rng, noise_std, digit_contrast)
+                            "train", corr, dominant_map, palette, rng, noise_std)
     save_split(out_dir, "train", train_data)
 
     val_data = make_split(train_images[indices[:n_val]], train_labels[indices[:n_val]], 
-                          "val", corr, dominant_map, palette, rng, noise_std, digit_contrast)
+                          "val", corr, dominant_map, palette, rng, noise_std)
     save_split(out_dir, "val", val_data)
 
     test_data = make_split(test_images, test_labels, "test_hard", corr, dominant_map, 
-                           palette, rng, noise_std, digit_contrast)
+                           palette, rng, noise_std)
     save_split(out_dir, "test_hard", test_data)
 
     meta = {
         "seed": seed, "correlation": corr, "val_fraction": val_fraction,
-        "noise_std": noise_std, "digit_contrast": digit_contrast,
+        "noise_std": noise_std,
         "palette": palette, "color_names": COLOR_NAMES, "dominant_map": dominant_map,
         "splits": {"train": len(train_data["labels"]), "val": len(val_data["labels"]), 
                    "test_hard": len(test_data["labels"])}
