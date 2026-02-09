@@ -8,7 +8,7 @@ def build_model(cfg):
         return SimpleCNN(
             in_channels=cfg.get("in_channels", 3),
             num_classes=cfg.get("num_classes", 10),
-            width=cfg.get("width", 6),
+            width=cfg.get("width", 4),
         )
     
     raise ValueError(f"unknown model: {name}")

@@ -17,20 +17,20 @@ except ImportError:
     MNIST = None
     TORCHVISION_AVAILABLE = False
 
-# 10 maximally distinguishable colors (spread across hue wheel + varying brightness)
+# 10 distinct colors — spread evenly across the hue wheel, no two look alike
 PALETTE = [
     (255, 0, 0),      # 0: red
-    (0, 255, 0),      # 1: lime
-    (0, 0, 255),      # 2: blue
-    (255, 255, 0),    # 3: yellow
-    (255, 0, 255),    # 4: magenta
-    (0, 255, 255),    # 5: cyan
-    (255, 128, 0),    # 6: orange
-    (128, 0, 255),    # 7: violet
-    (0, 128, 0),      # 8: dark green
-    (128, 128, 128),  # 9: gray
+    (0, 200, 0),      # 1: green
+    (0, 80, 255),     # 2: blue
+    (255, 220, 0),    # 3: yellow
+    (200, 0, 200),    # 4: purple
+    (0, 200, 200),    # 5: teal
+    (255, 130, 180),  # 6: pink
+    (140, 100, 50),   # 7: brown
+    (255, 255, 255),  # 8: white
+    (0, 0, 0),        # 9: black
 ]
-COLOR_NAMES = ["red", "lime", "blue", "yellow", "magenta", "cyan", "orange", "violet", "dark_green", "gray"]
+COLOR_NAMES = ["red", "green", "blue", "yellow", "purple", "teal", "pink", "brown", "white", "black"]
 
 
 def get_color_palette():
@@ -58,14 +58,16 @@ def sample_color_id(label, split, corr, dominant_map, rng):
 
 
 def make_textured_background(H, W, rgb, noise_std=0.15, rng=None):
+    """Each pixel is a different shade (brightness) of the same color."""
     base = torch.tensor([rgb[0], rgb[1], rgb[2]], dtype=torch.float32) / 255.0
-    bg = base.view(3, 1, 1).expand(3, H, W).clone()
+    # per-pixel brightness multiplier (single channel, broadcast to all 3)
     if rng is not None:
         np_rng = np.random.RandomState(rng.randint(0, 2**31))
-        noise = torch.from_numpy(np_rng.randn(3, H, W).astype(np.float32)) * noise_std
+        shade = torch.from_numpy(np_rng.randn(1, H, W).astype(np.float32)) * noise_std
     else:
-        noise = torch.randn(3, H, W) * noise_std
-    return torch.clamp(bg + noise, 0.0, 1.0)
+        shade = torch.randn(1, H, W) * noise_std
+    bg = base.view(3, 1, 1) + shade  # same shift across R,G,B → preserves hue
+    return torch.clamp(bg, 0.0, 1.0)
 
 
 def colorize_with_background(gray, bg_rgb, digit_rgb, noise_std=0.15, rng=None, digit_darkness=0.4):
@@ -107,8 +109,8 @@ def make_split(mnist_images, mnist_labels, split, corr, dominant_map, palette, r
         gray = mnist_images[i].float() / 255.0
         label = int(mnist_labels[i])
         color_id = sample_color_id(label, split, corr, dominant_map, rng)
-        # digit and background are SAME color - makes color shortcut very strong
-        images[i] = colorize_with_background(gray, palette[color_id], palette[color_id], noise_std, rng)
+        # white/grey digit on colored background - color shortcut is in the background only
+        images[i] = colorize_with_background(gray, palette[color_id], (255, 255, 255), noise_std, rng)
         labels[i] = label
         color_ids[i] = color_id
 
