@@ -6,7 +6,7 @@ Date: **09/02/2026**
 
 ---
 
-## What I did and did not do (and why) — First Page
+## What I did and did not do and why
 
 ### ✅ Completed
 
